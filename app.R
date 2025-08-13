@@ -121,7 +121,7 @@ server <- function(input, output, session) {
       The plan should include:
       1. Initial assesment of fitness. Pleas provide expected ranges for inital asessment workouts depending on age, sex, weight.
       2. A weekly workout schedule
-      3. Detailed exercises for each workout day from weekly plan
+      3. Detailed exercises for each workout day from weekly plan. Add Youtube links with video demostration of workout, check if link is active before adding it.
       4. Sets, reps, rest periods, RPM
       5. Instructions for each exercise
       6. Progression scheme over the 4 weeks
@@ -130,7 +130,7 @@ server <- function(input, output, session) {
       9. Motivation tips
       10. Some jokes
             
-      Format the response in markdown with clear headings and sections.Don't use emojis, just plain text or links."
+      Format the response in markdown with clear headings and sections.Don't use emojis, just plain text or links. Write all steps detaily, don't use ...would follow... or similar phrases. Don't write framework, but complete detailed guide"
     )
     
     # LLM call to generate fitness plan (using ellmer package with Claude)
@@ -140,7 +140,7 @@ server <- function(input, output, session) {
       # Note: For Claude, we need to use the Anthropic API which has a different format
       # Using ellmer package with Claude model
       chat <- ellmer::chat_anthropic(
-        model = 'claude-3-5-sonnet-20241022',
+        model = 'claude-sonnet-4-20250514',
         api_key = DEFAULT_API_KEY,  # Using the pre-configured API key
         system = system_prompt  # Adding system prompt for Claude
       )
