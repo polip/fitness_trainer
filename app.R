@@ -119,7 +119,7 @@ server <- function(input, output, session) {
       Available equipment: {user_profile$equipment}
       
       The plan should include:
-      1. Initial assesment of fitness
+      1. Initial assesment of fitness. Pleas provide expected ranges for inital asessment workouts depending on age, sex, weight.
       2. A weekly workout schedule
       3. Detailed exercises for each workout day from weekly plan
       4. Sets, reps, rest periods, RPM
