@@ -11,7 +11,7 @@ DEFAULT_API_KEY <- Sys.getenv("ANTHROPIC_API_KEY")
 
 # Set up the UI
 ui <- page_sidebar(
-  title = "STAY HARD - AI Fitness Plan Generator",
+  title = "AI Fitness Plan Generator",
   sidebar = sidebar(
     width = 300,
     
@@ -128,7 +128,7 @@ server <- function(input, output, session) {
       7. Detailed nutrition recommendations
       8. Recovery tips
       9. Motivation tips
-      10. Some jokes
+     
             
       Format the response in markdown with clear headings and sections.Don't use emojis, just plain text or links. Write all steps detaily, don't use ...would follow... or similar phrases. Don't write framework, but complete detailed guide"
     )
