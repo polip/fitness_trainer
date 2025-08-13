@@ -3,7 +3,7 @@ DEFAULT_API_KEY = Sys.getenv("ANTHROPIC_API_KEY")
 
 
 quick_chat <- ellmer::chat_anthropic(
-        model = 'claude-sonnet-4-20250514',
+        model = 'claude-3-5-haiku-latest',
         api_key = DEFAULT_API_KEY
       )
       

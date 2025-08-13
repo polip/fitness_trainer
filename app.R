@@ -140,7 +140,7 @@ server <- function(input, output, session) {
       # Note: For Claude, we need to use the Anthropic API which has a different format
       # Using ellmer package with Claude model
       chat <- ellmer::chat_anthropic(
-        model = 'claude-sonnet-4-20250514',
+        model = 'claude-3-5-haiku-latest',
         api_key = DEFAULT_API_KEY,  # Using the pre-configured API key
         system = system_prompt  # Adding system prompt for Claude
       )
