@@ -171,7 +171,7 @@ server <- function(input, output, session) {
   # PDF Download handler
   output$downloadPDF <- downloadHandler(
     filename = function() {
-      paste("fitness-plan-", format(Sys.Date(), "%Y-%m-%d"), ".pdf", sep = "")
+      paste("fitness-plan-", lubridate::now(), ".pdf", sep = "")
     },
     content = function(file) {
       # Don't try to create a PDF if no plan has been generated
@@ -185,7 +185,7 @@ server <- function(input, output, session) {
       
       # Create an R Markdown document with the fitness plan content
       rmd_content <- paste0(
-        "---
+      "---
       title: \"Your Fitness Plan\"
       output: 
         pdf_document:
