@@ -20,9 +20,9 @@ ui <- page_sidebar(
       accordion_panel(
         "Personal Information",
         selectInput("gender", "Gender",choices = c('Male','Female') ),
-        sliderInput("age", "Age", value = 40, min = 14, max = 100),
-        sliderInput("weight", "Weight (kg)", value = 99, min = 30, max = 200),
-        sliderInput("height", "Height (cm)", value = 185, min = 100, max = 250)
+        sliderInput("age", "Age", value = 40, min = 14, max = 85),
+        sliderInput("weight", "Weight (kg)", value = 99, min = 30, max = 180),
+        sliderInput("height", "Height (cm)", value = 185, min = 100, max = 225)
         
       ),  
       
@@ -57,7 +57,7 @@ ui <- page_sidebar(
     actionButton("generate", "Generate Fitness Plan", class = "btn-primary btn-lg", 
                  width = "100%", icon = icon("dumbbell")),
     # Download Button
-    downloadButton("downloadPDF", "Download as PDF", class = "btn-secondary btn-lg", 
+    downloadButton("downloadPDF", "Download plan as PDF", class = "btn-secondary btn-lg", 
                    width = "100%", icon = icon("download")),
   ),
   
@@ -139,13 +139,13 @@ server <- function(input, output, session) {
       # Call the Claude AI with the prompt using the pre-configured API key
       # Note: For Claude, we need to use the Anthropic API which has a different format
       # Using ellmer package with Claude model
-      chat <- ellmer::chat_anthropic(
+      claude <- ellmer::chat_anthropic(
         model = 'claude-3-5-haiku-latest',
         api_key = DEFAULT_API_KEY,  # Using the pre-configured API key
         system = system_prompt  # Adding system prompt for Claude
       )
       
-      llm_response <- chat$chat(user_prompt)   
+      llm_response <- claude$chat(user_prompt)   
       
       # For testing/demo purposes, we'll also include a mock response
       # as a fallback in case the API call doesn't work
