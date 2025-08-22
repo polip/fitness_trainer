@@ -3,11 +3,12 @@ title: fitness_trainer
 username: ivan-lozo
 account: ivan-lozo
 server: shinyapps.io
+envVars: ANTHROPIC_API_KEY
 hostUrl: https://api.shinyapps.io/v1
 appId: 14549527
-bundleId: 10710998
+bundleId:
 url: https://ivan-lozo.shinyapps.io/fitness_trainer/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: .RData|chat.R|README.md
+ignoredFiles: .RData|quick_chat.R|README.md

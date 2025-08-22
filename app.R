@@ -121,7 +121,7 @@ server <- function(input, output, session) {
       The plan should include:
       1. Initial assesment of fitness. Pleas provide expected ranges for inital asessment workouts depending on age, sex, weight.
       2. A weekly workout schedule
-      3. Detailed exercises for each workout day from weekly plan. Add Youtube links with video demostration of workout, check if link is active before adding it.
+      3. Detailed exercises for each workout day from weekly plan. 
       4. Sets, reps, rest periods, RPM
       5. Instructions for each exercise
       6. Progression scheme over the 4 weeks
