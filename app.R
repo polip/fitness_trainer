@@ -108,7 +108,7 @@ server <- function(input, output, session) {
     # Create user prompt for Claude
     user_prompt <- glue::glue(
       "Create a detailed 4-week fitness plan for {user_profile$age} years old {user_profile$gender}, 
-      weighing {user_profile$weight}kg and {user_profile$height}cm tall. Each daily workout should contain at least 8 exercises.
+      weighing {user_profile$weight}kg and {user_profile$height}cm tall. Each daily workout should contain at least 6 exercises.
       
       
       Training type: {user_profile$training_type}
@@ -119,8 +119,8 @@ server <- function(input, output, session) {
       Available equipment: {user_profile$equipment}
       
       The plan should include:
-      1. Initial assesment of fitness. Pleas provide expected ranges for inital asessment workouts depending on age, sex, weight.
-      2. A weekly workout schedule
+      1. Initial assesment of fitness with expected ranges for inital asessment workouts depending on age, sex, weight etc.
+      2. A daily workout schedule
       3. Detailed exercises for each workout day from weekly plan. 
       4. Sets, reps, rest periods, RPM
       5. Instructions for each exercise
