@@ -20,9 +20,9 @@ ui <- page_sidebar(
       accordion_panel(
         "Personal Information",
         selectInput("gender", "Gender",choices = c('Male','Female') ),
-        sliderInput("age", "Age", value = 40, min = 14, max = 85),
+        sliderInput("age", "Age", value = 47, min = 14, max = 85),
         sliderInput("weight", "Weight (kg)", value = 99, min = 30, max = 180),
-        sliderInput("height", "Height (cm)", value = 185, min = 100, max = 225)
+        sliderInput("height", "Height (cm)", value = 189, min = 100, max = 225)
         
       ),  
       
@@ -30,7 +30,7 @@ ui <- page_sidebar(
       accordion_panel(
         "Fitness Goals",
         selectInput("training_type", "Type of Training", 
-                    choices = c("Strength", "Hypertrophy", "Weight Loss", "Endurance", 
+                    choices = c("Strength", "Hypertrophy", "Weight Loss", "Endurance", "High intensity interval training", 
                                 "Functional", "General Fitness")),
         selectInput("experience", "Experience Level", 
                     choices = c("Beginner", "Intermediate", "Advanced")),
@@ -107,7 +107,7 @@ server <- function(input, output, session) {
     
     # Create user prompt for Claude
     user_prompt <- glue::glue(
-      "Create a detailed 4-week fitness plan for {user_profile$age} years old {user_profile$gender}, 
+      "Create a detailed 1-week fitness plan for {user_profile$age} years old {user_profile$gender}, 
       weighing {user_profile$weight}kg and {user_profile$height}cm tall. Each daily workout should contain at least 6 exercises.
       
       
@@ -119,8 +119,8 @@ server <- function(input, output, session) {
       Available equipment: {user_profile$equipment}
       
       The plan should include:
-      1. Initial assesment of fitness with expected ranges for inital asessment workouts depending on age, sex, weight etc.
-      2. A daily workout schedule
+      1. Initial assesment of fitness. Pleas provide expected ranges for inital asessment workouts depending on age, sex, weight.
+      2. A weekly workout schedule
       3. Detailed exercises for each workout day from weekly plan. 
       4. Sets, reps, rest periods, RPM
       5. Instructions for each exercise
