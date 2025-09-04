@@ -73,6 +73,10 @@ ui <- page_sidebar(
 
 # Server logic
 server <- function(input, output, session) {
+
+  # Track usage per session
+    session_requests <- reactiveVal(0)
+    MAX_REQUESTS_PER_SESSION <- 3
   
   # Reactive value to store the fitness plan
   fitness_plan <- reactiveVal("")
@@ -88,6 +92,18 @@ server <- function(input, output, session) {
   
   # Generate fitness plan when button is clicked
   observeEvent(input$generate, {
+
+    current_count <- session_requests()
+    if (current_count >= MAX_REQUESTS_PER_SESSION) {
+      showNotification("You've reached the maximum number of requests 
+  for this session. Please refresh to continue.",
+                        type = "error", duration = 10)
+        return()
+      }
+      
+# Increment counter before API call
+      session_requests(current_count + 1)
+    
     # Construct the user profile from inputs
     user_profile <- tibble(
       age = input$age,
