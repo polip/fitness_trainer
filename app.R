@@ -75,8 +75,8 @@ ui <- page_sidebar(
 server <- function(input, output, session) {
 
   # Track usage per session
-    session_requests <- reactiveVal(0)
-    MAX_REQUESTS_PER_SESSION <- 3
+  session_requests <- reactiveVal(0)
+  MAX_REQUESTS_PER_SESSION <- 3
   
   # Reactive value to store the fitness plan
   fitness_plan <- reactiveVal("")
@@ -92,6 +92,10 @@ server <- function(input, output, session) {
   
   # Generate fitness plan when button is clicked
   observeEvent(input$generate, {
+
+    # ---- Development/Testing Control ----
+    # Set `APP_MODE=production` as an environment variable to use the live API
+    APP_MODE <- Sys.getenv("APP_MODE", "development")
 
     current_count <- session_requests()
     if (current_count >= MAX_REQUESTS_PER_SESSION) {
@@ -135,40 +139,44 @@ server <- function(input, output, session) {
       Available equipment: {user_profile$equipment}
       
       The plan should include:
-      1. Initial assesment of fitness. Pleas provide expected ranges for inital asessment workouts depending on age, sex, weight.
+      1. Initial assesment of fitness. Also provide expected ranges for inital asessment workouts depending on age, sex, weight.
       2. A weekly workout schedule
       3. Detailed exercises for each workout day from weekly plan. 
       4. Sets, reps, rest periods, RPM
       5. Instructions for each exercise
-      6. Progression scheme over the 4 weeks
-      7. Detailed nutrition recommendations
-      8. Recovery tips
-      9. Motivation tips
+      6. Detailed nutrition recommendations
+      7. Recovery tips
      
             
       Format the response in markdown with clear headings and sections.Don't use emojis, just plain text or links. Write all steps detaily, don't use ...would follow... or similar phrases. Don't write framework, but complete detailed guide"
     )
     
-    # LLM call to generate fitness plan (using ellmer package with Claude)
-    # Wrapping in tryCatch to handle potential errors
     plan_result <- tryCatch({
-      # Call the Claude AI with the prompt using the pre-configured API key
-      # Note: For Claude, we need to use the Anthropic API which has a different format
-      # Using ellmer package with Claude model
-      claude <- ellmer::chat_anthropic(
-        model = 'claude-3-5-haiku-latest',
-        api_key = DEFAULT_API_KEY,  # Using the pre-configured API key
-        system = system_prompt  # Adding system prompt for Claude
-      )
-      
-      llm_response <- claude$chat(user_prompt)   
-      
-      # For testing/demo purposes, we'll also include a mock response
-      # as a fallback in case the API call doesn't work
-      if (is.null(llm_response) || llm_response == "") {stop('LLM response not created!')} else {
-        llm_response
+      if (APP_MODE == "development") {
+        # --- MOCK RESPONSE (for development) ---
+        message("APP_MODE is 'development'. Using mock data.")
+        # Add a small delay to simulate API call latency
+        Sys.sleep(1) 
+        readr::read_file("mock_plan.md")
+      } else {
+        # --- LIVE API CALL (for production) ---
+        message("APP_MODE is 'production'. Making live API call.")
+        claude <- ellmer::chat_anthropic(
+          model = 'claude-3-5-haiku-latest',
+          api_key = DEFAULT_API_KEY,
+          system = system_prompt
+        )
+        
+        llm_response <- claude$chat(user_prompt)
+        
+        if (is.null(llm_response) || llm_response == "") {
+          stop('LLM response not created!')
+        } else {
+          llm_response
+        }
       }
     }, error = function(e) {
+      message("Error during plan generation: ", e$message)
       paste("Error generating fitness plan:", e$message, 
             "\n\nPlease try again or contact the app administrator if the error persists.")
     })
@@ -187,7 +195,7 @@ server <- function(input, output, session) {
   # PDF Download handler
   output$downloadPDF <- downloadHandler(
     filename = function() {
-      paste("fitness-plan-", lubridate::now(), ".pdf", sep = "")
+      paste0("fitness-plan-", format(lubridate::now(), "%Y-%m-%d_%H-%M-%S"), ".pdf")
     },
     content = function(file) {
       # Don't try to create a PDF if no plan has been generated
@@ -216,29 +224,29 @@ server <- function(input, output, session) {
       writeLines(rmd_content, tempRmd)
       
       # Load required packages
-      if (!requireNamespace("tinytex", quietly = TRUE)) {
-        showNotification("Required package 'tinytex' is missing", type = "error")
+      if (!tinytex::is_tinytex()) {
+        showNotification("TinyTeX is not installed. Please run tinytex::install_tinytex() in your R console.", type = "error", duration = 10)
         return()
       }
       
       # Convert Rmd to PDF using rmarkdown with detailed error logging
       tryCatch({
-        # Use tinytex to handle LaTeX compilation
-        withr::with_envvar(c(TINYTEX_VERBOSE = "true"), {
-          rmarkdown::render(tempRmd, output_file = file, quiet = FALSE)
-        })
+        # rmarkdown::render will use tinytex automatically if it's installed.
+        # tinytex will attempt to install missing packages by default.
+        rmarkdown::render(tempRmd, output_file = file, quiet = FALSE)
       }, error = function(e) {
         # Log detailed error information
         message("PDF generation error: ", e$message)
-        showNotification(paste("Error creating PDF:", e$message), type = "error")
+        showNotification("Failed to generate PDF. This might be due to missing LaTeX packages. Check the R console log for details.", type = "error", duration = 10)
         
         # Try to get more LaTeX error details
         log_files <- list.files(dirname(tempRmd), pattern = "\\.log$", full.names = TRUE)
         if (length(log_files) > 0) {
           log_content <- readLines(log_files[1], warn = FALSE)
-          error_lines <- grep("! ", log_content, value = TRUE)
+          # A more robust way to find the missing package
+          error_lines <- grep("! LaTeX Error: File `.*' not found.", log_content, value = TRUE)
           if (length(error_lines) > 0) {
-            message("LaTeX errors found: ", paste(error_lines, collapse = "; "))
+            message("LaTeX error from log file: ", paste(error_lines, collapse = "; "))
           }
         }
       }, finally = {
