@@ -3,7 +3,6 @@ library(bslib)
 library(tidyverse)
 library(ellmer)  # For LLM integration
 library(pagedown) # For HTML to PDF conversion
-library(tinytex)
 
 # Set a default API key directly in the code
 DEFAULT_API_KEY <- Sys.getenv("ANTHROPIC_API_KEY")
@@ -204,54 +203,60 @@ server <- function(input, output, session) {
         return()
       }
       
-      # Create temporary Rmd file
-      tempRmd <- tempfile(fileext = ".Rmd")
+      # Create temporary HTML file
+      tempHtml <- tempfile(fileext = ".html")
       
-      # Create an R Markdown document with the fitness plan content
-      rmd_content <- paste0(
-      "---
-      title: \"Your Fitness Plan\"
-      output: 
-        pdf_document:
-          latex_engine: xelatex
-      ---
-
-      ",
-        fitness_plan()
+      # Create HTML content with the fitness plan
+      html_content <- paste0(
+        "<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Your Fitness Plan</title>
+<style>
+body { 
+  font-family: Arial, sans-serif; 
+  line-height: 1.6; 
+  margin: 40px;
+  max-width: 800px;
+}
+h1, h2, h3 { 
+  color: #333; 
+  margin-top: 30px;
+}
+h1 { 
+  text-align: center; 
+  border-bottom: 2px solid #333;
+  padding-bottom: 10px;
+}
+@media print {
+  body { margin: 20px; }
+}
+</style>
+</head>
+<body>
+<h1>Your Fitness Plan</h1>",
+        markdown::markdownToHTML(text = fitness_plan(), fragment.only = TRUE),
+        "</body></html>"
       )
       
-      # Write the Rmd content to the temporary file
-      writeLines(rmd_content, tempRmd)
+      # Write the HTML content to the temporary file
+      writeLines(html_content, tempHtml)
       
-      # Load required packages
-      if (!tinytex::is_tinytex()) {
-        showNotification("TinyTeX is not installed. Please run tinytex::install_tinytex() in your R console.", type = "error", duration = 10)
-        return()
-      }
-      
-      # Convert Rmd to PDF using rmarkdown with detailed error logging
+      # Convert HTML to PDF using pagedown
       tryCatch({
-        # rmarkdown::render will use tinytex automatically if it's installed.
-        # tinytex will attempt to install missing packages by default.
-        rmarkdown::render(tempRmd, output_file = file, quiet = FALSE)
+        pagedown::chrome_print(
+          input = tempHtml, 
+          output = file,
+          timeout = 60
+        )
       }, error = function(e) {
         # Log detailed error information
         message("PDF generation error: ", e$message)
-        showNotification("Failed to generate PDF. This might be due to missing LaTeX packages. Check the R console log for details.", type = "error", duration = 10)
-        
-        # Try to get more LaTeX error details
-        log_files <- list.files(dirname(tempRmd), pattern = "\\.log$", full.names = TRUE)
-        if (length(log_files) > 0) {
-          log_content <- readLines(log_files[1], warn = FALSE)
-          # A more robust way to find the missing package
-          error_lines <- grep("! LaTeX Error: File `.*' not found.", log_content, value = TRUE)
-          if (length(error_lines) > 0) {
-            message("LaTeX error from log file: ", paste(error_lines, collapse = "; "))
-          }
-        }
+        showNotification("Failed to generate PDF. This might be due to Chrome/Chromium not being available on the server.", type = "error", duration = 10)
       }, finally = {
         # Clean up
-        unlink(tempRmd)
+        unlink(tempHtml)
       })
     },
     contentType = "application/pdf"
