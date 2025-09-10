@@ -3,6 +3,7 @@ library(bslib)
 library(tidyverse)
 library(ellmer)  # For LLM integration
 library(pagedown) # For HTML to PDF conversion
+library(tibble) # For tibble()
 
 # Set a default API key directly in the code
 DEFAULT_API_KEY <- Sys.getenv("ANTHROPIC_API_KEY")
@@ -58,6 +59,8 @@ ui <- page_sidebar(
     # Download Button
     downloadButton("downloadPDF", "Download plan as PDF", class = "btn-secondary btn-lg", 
                    width = "100%", icon = icon("download")),
+    # API Key Input
+    textInput("api_key", "Anthropic API Key", placeholder = "Enter your API key here"),
   ),
   
   # Main Panel
@@ -77,97 +80,82 @@ server <- function(input, output, session) {
   session_requests <- reactiveVal(0)
   MAX_REQUESTS_PER_SESSION <- 3
   
-  # Reactive value to store the fitness plan
+  # Reactive values to store the fitness plan and loading state
   fitness_plan <- reactiveVal("")
+  is_generating <- reactiveVal(FALSE)
   
-  # Show loading message when generating
+  # Show dynamic content based on state
   output$loading_text <- renderText({
-    if(input$generate > 0) {
-      "Generating your personalized fitness plan... This may take a few moments."
-    } else {
+    if(is_generating()) {
+      "🔄 Generating your personalized fitness plan..."
+    } else if(input$generate == 0) {
       "Enter your information and click 'Generate Fitness Plan' to get started."
+    } else {
+      "" # Hide when plan is ready
     }
   })
   
   # Generate fitness plan when button is clicked
   observeEvent(input$generate, {
-
+    # Set loading state
+    is_generating(TRUE)
+    fitness_plan("") # Clear previous plan
+    
     # ---- Development/Testing Control ----
     # Set `APP_MODE=production` as an environment variable to use the live API
     APP_MODE <- Sys.getenv("APP_MODE", "development")
 
     current_count <- session_requests()
     if (current_count >= MAX_REQUESTS_PER_SESSION) {
-      showNotification("You've reached the maximum number of requests 
-  for this session. Please refresh to continue.",
-                        type = "error", duration = 10)
-        return()
-      }
-      
-# Increment counter before API call
-      session_requests(current_count + 1)
-    
+      is_generating(FALSE)
+      showNotification("You've reached the maximum number of requests for this session. Please refresh to continue.",
+                      type = "error", duration = 10)
+      return()
+    }
+
+    # Increment counter before API call
+    session_requests(current_count + 1)
+
     # Construct the user profile from inputs
     user_profile <- tibble(
       age = input$age,
-      gender=input$gender,
+      gender = input$gender,
       weight = input$weight,
       height = input$height,
       training_type = input$training_type,
       experience = input$experience,
       frequency = input$frequency,
-      goals = if(input$goals == "") "General fitness improvement" else input$goals,
-      limitations = if(input$limitations == "") "None" else input$limitations,
+      goals = if (input$goals == "") "General fitness improvement" else input$goals,
+      limitations = if (input$limitations == "") "None" else input$limitations,
       equipment = input$equipment
     )
-    
+
     # System prompt for Claude AI
     system_prompt <- "You are a professional fitness trainer and nutrition specialist with expertise in creating personalized workout plans. You provide detailed, evidence-based fitness advice tailored to individual needs and goals. Your recommendations are practical, safe, and effective for people of all fitness levels."
-    
+
     # Create user prompt for Claude
     user_prompt <- glue::glue(
-      "Create a detailed 1-week fitness plan for {user_profile$age} years old {user_profile$gender}, 
-      weighing {user_profile$weight}kg and {user_profile$height}cm tall. Each daily workout should contain at least 6 exercises.
-      
-      
-      Training type: {user_profile$training_type}
-      Experience level: {user_profile$experience}
-      Training frequency: {user_profile$frequency}
-      Specific goals: {user_profile$goals}
-      Limitations/injuries: {user_profile$limitations}
-      Available equipment: {user_profile$equipment}
-      
-      The plan should include:
-      1. Initial assesment of fitness. Also provide expected ranges for inital asessment workouts depending on age, sex, weight.
-      2. A weekly workout schedule
-      3. Detailed exercises for each workout day from weekly plan. 
-      4. Sets, reps, rest periods, RPM
-      5. Instructions for each exercise
-      6. Detailed nutrition recommendations
-      7. Recovery tips
-     
-            
-      Format the response in markdown with clear headings and sections.Don't use emojis, just plain text or links. Write all steps detaily, don't use ...would follow... or similar phrases. Don't write framework, but complete detailed guide"
+      "Create a detailed 1-week fitness plan for {user_profile$age} years old {user_profile$gender}, \n      weighing {user_profile$weight}kg and {user_profile$height}cm tall. Each daily workout should contain at least 6 exercises.\n\n      Training type: {user_profile$training_type}\n      Experience level: {user_profile$experience}\n      Training frequency: {user_profile$frequency}\n      Specific goals: {user_profile$goals}\n      Limitations/injuries: {user_profile$limitations}\n      Available equipment: {user_profile$equipment}\n\n      The plan should include:\n      1. Initial assesment of fitness. Also provide expected ranges for inital asessment workouts depending on age, sex, weight.\n      2. A weekly workout schedule\n      3. Detailed exercises for each workout day from weekly plan. \n      4. Sets, reps, rest periods, RPM\n      5. Instructions for each exercise\n      6. Detailed nutrition recommendations\n      7. Recovery tips\n\n      Format the response in markdown with clear headings and sections.Don't use emojis, just plain text or links. Write all steps detaily, don't use ...would follow... or similar phrases. Don't write framework, but complete detailed guide"
     )
-    
+
+    # Use API key from input
+    api_key_value <- input$api_key
+
     plan_result <- tryCatch({
       if (APP_MODE == "development") {
         # --- MOCK RESPONSE (for development) ---
         message("APP_MODE is 'development'. Using mock data.")
-        # Add a small delay to simulate API call latency
-        Sys.sleep(1) 
+        Sys.sleep(1)
         readr::read_file("mock_plan.md")
       } else {
         # --- LIVE API CALL (for production) ---
         message("APP_MODE is 'production'. Making live API call.")
         claude <- ellmer::chat_anthropic(
-          model = 'claude-3-5-haiku-latest',
-          api_key = DEFAULT_API_KEY,
+          model = 'claude-sonnet-4-20250514',
+          api_key = api_key_value,
           system = system_prompt
         )
-        
         llm_response <- claude$chat(user_prompt)
-        
         if (is.null(llm_response) || llm_response == "") {
           stop('LLM response not created!')
         } else {
@@ -176,17 +164,31 @@ server <- function(input, output, session) {
       }
     }, error = function(e) {
       message("Error during plan generation: ", e$message)
-      paste("Error generating fitness plan:", e$message, 
+      paste("Error generating fitness plan:", e$message,
             "\n\nPlease try again or contact the app administrator if the error persists.")
     })
-    
-    # Store the generated plan
-    fitness_plan(plan_result) ### reactive value
-    
+
+    # Store the generated plan and stop loading
+    fitness_plan(plan_result)
+    is_generating(FALSE)
+
     # Update the UI with the markdown content
     output$fitness_plan_ui <- renderUI({
-      if(input$generate > 0) {
+      if (!is_generating() && fitness_plan() != "") {
         HTML(markdown::markdownToHTML(text = fitness_plan(), fragment.only = TRUE))
+      } else if (is_generating()) {
+        div(
+          style = "text-align: center; padding: 50px;",
+          div(
+            class = "spinner-border text-primary",
+            role = "status",
+            style = "width: 3rem; height: 3rem;",
+            span(class = "visually-hidden", "Loading...")
+          ),
+          br(), br(),
+          h4("Creating your personalized fitness plan...", style = "color: #666;"),
+          p("Analyzing your profile and generating customized recommendations.", style = "color: #888;")
+        )
       }
     })
   })
