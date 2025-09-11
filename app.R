@@ -139,7 +139,7 @@ server <- function(input, output, session) {
     )
 
     # Use API key from input
-    api_key_value <- input$api_key
+    api_key_value <- DEFAULT_API_KEY
 
     plan_result <- tryCatch({
       if (APP_MODE == "development") {
