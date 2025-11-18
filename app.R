@@ -8,13 +8,12 @@ library(tibble) # For tibble()
 # Set a default API key directly in the code
 DEFAULT_API_KEY <- Sys.getenv("ANTHROPIC_API_KEY")
 
-
 # Set up the UI
 ui <- page_sidebar(
   title = "AI Fitness Plan Generator",
   sidebar = sidebar(
     width = 300,
-    
+
     # Personal Information
     accordion(
       accordion_panel(
@@ -51,7 +50,6 @@ ui <- page_sidebar(
         
       )
     ),
-    
     
     # Generate Button
     actionButton("generate", "Generate Fitness Plan", class = "btn-primary btn-lg", 
@@ -128,16 +126,6 @@ server <- function(input, output, session) {
     # Set `APP_MODE=production` as an environment variable to use the live API
     APP_MODE <- Sys.getenv("APP_MODE", "development")
 
-    current_count <- session_requests()
-    if (current_count >= MAX_REQUESTS_PER_SESSION) {
-      is_generating(FALSE)
-      showNotification("You've reached the maximum number of requests for this session. Please refresh to continue.",
-                      type = "error", duration = 10)
-      return()
-    }
-
-    # Increment counter before API call
-    session_requests(current_count + 1)
 
     # Construct the user profile from inputs
     user_profile <- tibble(
@@ -185,7 +173,7 @@ server <- function(input, output, session) {
         
         if (ai_provider == "anthropic") {
           claude <- ellmer::chat_anthropic(
-            model = 'claude-3-5-sonnet-20241022',
+            model = 'claude-sonnet-4-20250514',
             api_key = api_key_value,
             system = system_prompt
           )
@@ -199,7 +187,7 @@ server <- function(input, output, session) {
           llm_response <- gpt$chat(user_prompt)
         } else if (ai_provider == "google") {
           gemini <- ellmer::chat_google(
-            model = 'gemini-1.5-pro',
+            model = 'gemini-2.5-flash',
             api_key = api_key_value,
             system = system_prompt
           )
