@@ -59,8 +59,15 @@ ui <- page_sidebar(
     # Download Button
     downloadButton("downloadPDF", "Download plan as PDF", class = "btn-secondary btn-lg", 
                    width = "100%", icon = icon("download")),
+    
+    # AI Provider Selection
+    selectInput("ai_provider", "AI Provider", 
+                choices = c("Anthropic (Claude)" = "anthropic", 
+                           "OpenAI (GPT)" = "openai",
+                           "Google (Gemini)" = "google"),
+                selected = "openai"),
     # API Key Input
-    textInput("api_key", "Anthropic API Key", placeholder = "Enter your API key here"),
+    uiOutput("api_key_input"),
   ),
   
   # Main Panel
@@ -83,6 +90,22 @@ server <- function(input, output, session) {
   # Reactive values to store the fitness plan and loading state
   fitness_plan <- reactiveVal("")
   is_generating <- reactiveVal(FALSE)
+  
+  # Dynamic API key input based on selected provider
+  output$api_key_input <- renderUI({
+    provider <- input$ai_provider
+    
+    if (provider == "anthropic") {
+      textInput("api_key", "Anthropic API Key", 
+                placeholder = "sk-ant-...")
+    } else if (provider == "openai") {
+      textInput("api_key", "OpenAI API Key", 
+                placeholder = "sk-...")
+    } else if (provider == "google") {
+      textInput("api_key", "Google API Key", 
+                placeholder = "Enter your Google API key...")
+    }
+  })
   
   # Show dynamic content based on state
   output$loading_text <- renderText({
@@ -138,8 +161,17 @@ server <- function(input, output, session) {
       "Create a detailed 1-week fitness plan for {user_profile$age} years old {user_profile$gender}, \n      weighing {user_profile$weight}kg and {user_profile$height}cm tall. Each daily workout should contain at least 6 exercises.\n\n      Training type: {user_profile$training_type}\n      Experience level: {user_profile$experience}\n      Training frequency: {user_profile$frequency}\n      Specific goals: {user_profile$goals}\n      Limitations/injuries: {user_profile$limitations}\n      Available equipment: {user_profile$equipment}\n\n      The plan should include:\n      1. Initial assesment of fitness. Also provide expected ranges for inital asessment workouts depending on age, sex, weight.\n      2. A weekly workout schedule\n      3. Detailed exercises for each workout day from weekly plan. \n      4. Sets, reps, rest periods, RPM\n      5. Instructions for each exercise\n      6. Detailed nutrition recommendations\n      7. Recovery tips\n\n      Format the response in markdown with clear headings and sections.Don't use emojis, just plain text or links. Write all steps detaily, don't use ...would follow... or similar phrases. Don't write framework, but complete detailed guide"
     )
 
-    # Use API key from input
+    # Use API key and provider from input
     api_key_value <- input$api_key
+    ai_provider <- input$ai_provider
+    
+    # Validate API key is provided
+    if (is.null(api_key_value) || api_key_value == "") {
+      is_generating(FALSE)
+      showNotification("Please enter an API key for the selected AI provider.", 
+                      type = "error", duration = 5)
+      return()
+    }
 
     plan_result <- tryCatch({
       if (APP_MODE == "development") {
@@ -149,13 +181,33 @@ server <- function(input, output, session) {
         readr::read_file("mock_plan.md")
       } else {
         # --- LIVE API CALL (for production) ---
-        message("APP_MODE is 'production'. Making live API call.")
-        claude <- ellmer::chat_anthropic(
-          model = 'claude-sonnet-4-20250514',
-          api_key = api_key_value,
-          system = system_prompt
-        )
-        llm_response <- claude$chat(user_prompt)
+        message(paste("APP_MODE is 'production'. Making live API call with provider:", ai_provider))
+        
+        if (ai_provider == "anthropic") {
+          claude <- ellmer::chat_anthropic(
+            model = 'claude-3-5-sonnet-20241022',
+            api_key = api_key_value,
+            system = system_prompt
+          )
+          llm_response <- claude$chat(user_prompt)
+        } else if (ai_provider == "openai") {
+          gpt <- ellmer::chat_openai(
+            model = 'gpt-4o',
+            api_key = api_key_value,
+            system = system_prompt
+          )
+          llm_response <- gpt$chat(user_prompt)
+        } else if (ai_provider == "google") {
+          gemini <- ellmer::chat_google(
+            model = 'gemini-1.5-pro',
+            api_key = api_key_value,
+            system = system_prompt
+          )
+          llm_response <- gemini$chat(user_prompt)
+        } else {
+          stop("Unsupported AI provider selected")
+        }
+        
         if (is.null(llm_response) || llm_response == "") {
           stop('LLM response not created!')
         } else {
