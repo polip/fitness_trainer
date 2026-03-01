@@ -164,7 +164,7 @@ def generate_fitness_plan(user_profile, system_prompt, user_prompt, provider, ap
             from anthropic import Anthropic
             client = Anthropic(api_key=api_key)
             response = client.messages.create(
-                model="claude-sonnet-4.5",
+                model="claude-sonnet-4-20250514",
                 max_tokens=8000,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}]
