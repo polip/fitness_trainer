@@ -186,7 +186,7 @@ server <- function(input, output, session) {
           )
           llm_response <- gpt$chat(user_prompt)
         } else if (ai_provider == "google") {
-          gemini <- ellmer::chat_google(
+          gemini <- ellmer::chat_gemini(
             model = 'gemini-2.5-flash',
             api_key = api_key_value,
             system = system_prompt
