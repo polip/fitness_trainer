@@ -1,5 +1,26 @@
+# R-specific
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 .Renviron
+
+# Python-specific
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

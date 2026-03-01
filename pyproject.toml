@@ -1,0 +1,16 @@
+[project]
+name = "fitness-trainer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.18.0",
+    "google-generativeai>=0.3.0",
+    "markdown>=3.5.0",
+    "openai>=1.12.0",
+    "python-dotenv>=1.0.0",
+    "reportlab>=4.0.0",
+    "streamlit>=1.30.0",
+    "weasyprint>=60.0",
+]
