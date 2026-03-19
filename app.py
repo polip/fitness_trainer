@@ -81,7 +81,7 @@ with st.sidebar:
         )
         frequency = st.selectbox(
             "Training Frequency",
-            options=["2-3 days/week", "3-4 days/week", "4-5 days/week", "5+ days/week"]
+            options=["Single training session","2-3 days/week", "3-4 days/week", "4-5 days/week", "5+ days/week"]
         )
         goals = st.text_area(
             "Specific Goals (optional)",
@@ -109,31 +109,43 @@ with st.sidebar:
         index=0
     )
 
-    # API Key Input
+    # API Key Input - Only show if not in environment variables
     if ai_provider == "Anthropic (Claude)":
-        api_key_default = os.getenv("ANTHROPIC_API_KEY", "")
-        api_key = st.text_input(
-            "Anthropic API Key",
-            value=api_key_default,
-            type="password",
-            placeholder="sk-ant-..."
-        )
+        api_key_env = os.getenv("ANTHROPIC_API_KEY", "")
+        if api_key_env:
+            st.success("✅ API Key loaded from environment")
+            api_key = api_key_env
+        else:
+            api_key = st.text_input(
+                "Anthropic API Key",
+                value="",
+                type="password",
+                placeholder="sk-ant-..."
+            )
     elif ai_provider == "OpenAI (GPT)":
-        api_key_default = os.getenv("OPENAI_API_KEY", "")
-        api_key = st.text_input(
-            "OpenAI API Key",
-            value=api_key_default,
-            type="password",
-            placeholder="sk-..."
-        )
+        api_key_env = os.getenv("OPENAI_API_KEY", "")
+        if api_key_env:
+            st.success("✅ API Key loaded from environment")
+            api_key = api_key_env
+        else:
+            api_key = st.text_input(
+                "OpenAI API Key",
+                value="",
+                type="password",
+                placeholder="sk-..."
+            )
     else:  # Google Gemini
-        api_key_default = os.getenv("GOOGLE_API_KEY", "")
-        api_key = st.text_input(
-            "Google API Key",
-            value=api_key_default,
-            type="password",
-            placeholder="Enter your Google API key..."
-        )
+        api_key_env = os.getenv("GOOGLE_API_KEY", "")
+        if api_key_env:
+            st.success("✅ API Key loaded from environment")
+            api_key = api_key_env
+        else:
+            api_key = st.text_input(
+                "Google API Key",
+                value="",
+                type="password",
+                placeholder="Enter your Google API key..."
+            )
 
     st.divider()
 
@@ -175,7 +187,7 @@ def generate_fitness_plan(user_profile, system_prompt, user_prompt, provider, ap
             from openai import OpenAI
             client = OpenAI(api_key=api_key)
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4.1-2025-04-14",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -187,7 +199,7 @@ def generate_fitness_plan(user_profile, system_prompt, user_prompt, provider, ap
             import google.generativeai as genai
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel(
-                model_name='gemini-2.0-flash-exp',
+                model_name='gemini-2.5-flash',
                 system_instruction=system_prompt
             )
             response = model.generate_content(user_prompt)
@@ -284,8 +296,9 @@ if generate_button:
         system_prompt = """You are a professional fitness trainer and nutrition specialist with expertise in creating personalized workout plans. You provide detailed, evidence-based fitness advice tailored to individual needs and goals. Your recommendations are practical, safe, and effective for people of all fitness levels."""
 
         # User prompt
-        user_prompt = f"""Create a detailed 1-week fitness plan for {user_profile['age']} years old {user_profile['gender']},
-weighing {user_profile['weight']}kg and {user_profile['height']}cm tall. Each daily workout should contain at least 6 exercises.
+        user_prompt = f"""Create a detailed 1-week or 1-session fitness plan for {user_profile['age']} years old {user_profile['gender']},
+weighing {user_profile['weight']}kg and {user_profile['height']}cm tall. Each daily workout should contain at least 6 exercises. 
+If the user has specified a single training session, create a detailed workout plan for that session instead of a weekly schedule with at least 10 exercises.
 
 Training type: {user_profile['training_type']}
 Experience level: {user_profile['experience']}
@@ -324,6 +337,7 @@ Format the response in markdown with clear headings and sections. Don't use emoj
 if st.session_state.fitness_plan:
     st.markdown('<div class="fitness-plan">', unsafe_allow_html=True)
     st.markdown(st.session_state.fitness_plan)
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Download PDF button

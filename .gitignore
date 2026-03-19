@@ -24,3 +24,10 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+*.pdf
+*.json
+*.log
+*.csv
+*.xlsx
+*.docx
+*.pptx
