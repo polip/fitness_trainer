@@ -1,4 +1,4 @@
-1. Initial Fitness Assessment
+## 1. Initial Fitness Assessment
 Physical Profile
 • Age: 47 years
 • Weight: 99 kg
@@ -20,19 +20,15 @@ Initial Assessment Tests
 4. Strength Assessment
 5. Flexibility Evaluation
 6. Body Composition Analysis
-2. Weekly Workout Schedule
-DayFocusWorkout Type
-Monday
-Wednesday
-Friday
-Saturday/SundayUpper Body HIIT
-Lower Body HIIT
-Full Body Metabolic Conditioning
-Active RecoveryStrength + Cardio
-Strength + Cardio
-Comprehensive HIIT
-Light Movement
-3. Detailed Workout Plans
+## 2. Weekly Workout Schedule
+
+| Day | Focus | Workout Type |
+|-----|-------|-------------|
+| Monday | Upper Body HIIT | Strength + Cardio |
+| Wednesday | Lower Body HIIT | Strength + Cardio |
+| Friday | Full Body Metabolic Conditioning | Comprehensive HIIT |
+| Saturday/Sunday | Active Recovery | Light Movement |
+## 3. Detailed Workout Plans
 Monday: Upper Body HIIT
 Warm-Up (10 minutes)
 1• Light cardio
@@ -70,7 +66,7 @@ Main Workout
 • Repeat 5 times
 • Options: Battle ropes, mountain climbers
 Similar Detailed Plans for Wednesday and Friday
-4. Progressive Overload Plan
+## 4. Progressive Overload Plan
 4-Week Progression
 Week 1
 • Focus on form
@@ -80,7 +76,7 @@ Week 2
 • Increase weight by 5-10%
 • Add 1-2 reps per set
 • Maintain proper form
-2Week 3
+Week 3
 • Increase weight again
 • Reduce rest periods
 • Introduce more complex movements
@@ -88,7 +84,7 @@ Week 4
 • Peak intensity
 • Maximum weight with perfect form
 • Advanced HIIT techniques
-5. Nutrition Recommendations
+## 5. Nutrition Recommendations
 Macronutrient Breakdown
 • Protein: 30% (1.6-2.2g per kg body weight)
 • Carbohydrates: 40%
@@ -101,7 +97,7 @@ Meal Timing
 • Pre-Workout: Complex carbs
 • Post-Workout: Protein + Quick Carbs
 • Dinner: Lean protein, vegetables
-6. Recovery Strategies
+## 6. Recovery Strategies
 Sleep
 • 7-8 hours nightly
 • Consistent sleep schedule
@@ -116,7 +112,7 @@ Recovery Techniques
 • Massage
 • Hydration
 • Compression wear
-37. Motivation Strategies
+## 7. Motivation Strategies
 Mental Approach
 • Set realistic goals
 • Track progress

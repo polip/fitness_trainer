@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import markdown
 from io import BytesIO
 from weasyprint import HTML
+from anthropic import Anthropic
 
 # Load environment variables
 load_dotenv()
@@ -110,19 +111,7 @@ with st.sidebar:
     )
 
     # API Key Input - Only show if not in environment variables
-    if ai_provider == "Anthropic (Claude)":
-        api_key_env = os.getenv("ANTHROPIC_API_KEY", "")
-        if api_key_env:
-            st.success("✅ API Key loaded from environment")
-            api_key = api_key_env
-        else:
-            api_key = st.text_input(
-                "Anthropic API Key",
-                value="",
-                type="password",
-                placeholder="sk-ant-..."
-            )
-    elif ai_provider == "OpenAI (GPT)":
+    if ai_provider == "OpenAI (GPT)":
         api_key_env = os.getenv("OPENAI_API_KEY", "")
         if api_key_env:
             st.success("✅ API Key loaded from environment")
@@ -133,6 +122,18 @@ with st.sidebar:
                 value="",
                 type="password",
                 placeholder="sk-..."
+            )
+    elif ai_provider == "Anthropic (Claude)":
+        api_key_env = os.getenv("ANTHROPIC_API_KEY", "")
+        if api_key_env:
+            st.success("✅ API Key loaded from environment")
+            api_key = api_key_env
+        else:
+            api_key = st.text_input(
+                "Anthropic API Key",
+                value="",
+                type="password",
+                placeholder="sk-ant-..."
             )
     else:  # Google Gemini
         api_key_env = os.getenv("GOOGLE_API_KEY", "")
@@ -172,8 +173,19 @@ def generate_fitness_plan(user_profile, system_prompt, user_prompt, provider, ap
 
     # Production mode - call actual API
     try:
-        if provider == "Anthropic (Claude)":
-            from anthropic import Anthropic
+        if provider == "OpenAI (GPT)":
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ]
+            )
+            return response.choices[0].message.content
+
+        elif provider == "Anthropic (Claude)":
             client = Anthropic(api_key=api_key)
             response = client.messages.create(
                 model="claude-sonnet-4-20250514",
@@ -182,18 +194,6 @@ def generate_fitness_plan(user_profile, system_prompt, user_prompt, provider, ap
                 messages=[{"role": "user", "content": user_prompt}]
             )
             return response.content[0].text
-
-        elif provider == "OpenAI (GPT)":
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key)
-            response = client.chat.completions.create(
-                model="gpt-4.1-2025-04-14",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ]
-            )
-            return response.choices[0].message.content
 
         elif provider == "Google (Gemini)":
             import google.generativeai as genai
