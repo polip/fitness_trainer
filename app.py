@@ -188,7 +188,7 @@ def generate_fitness_plan(user_profile, system_prompt, user_prompt, provider, ap
         elif provider == "Anthropic (Claude)":
             client = Anthropic(api_key=api_key)
             response = client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-haiku-4-5-20251001",
                 max_tokens=8000,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}]
